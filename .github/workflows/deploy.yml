@@ -1,0 +1,65 @@
+name: Deploy Cloud Run Functions
+
+on:
+  push:
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+  BQ_DATASET: weather_etl
+  BQ_TABLE: hourly_weather
+
+jobs:
+  deploy:
+    name: Deploy to GCP
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      # ── Function 1: extract (HTTP trigger) ───────────────────────────────
+      - name: Deploy extract function
+        run: |
+          gcloud functions deploy extract \
+            --gen2 \
+            --region=${{ env.REGION }} \
+            --runtime=python312 \
+            --source=./extract \
+            --entry-point=extract \
+            --trigger-http \
+            --allow-unauthenticated \
+            --set-env-vars GCS_BUCKET=${{ env.GCS_BUCKET }} \
+            --memory=256Mi \
+            --timeout=120s
+
+      # ── Function 2: load (GCS trigger) ───────────────────────────────────
+      - name: Deploy load function
+        run: |
+          gcloud functions deploy load \
+            --gen2 \
+            --region=${{ env.REGION }} \
+            --runtime=python312 \
+            --source=./load \
+            --entry-point=load \
+            --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
+            --trigger-event-filters="bucket=${{ env.GCS_BUCKET }}" \
+            --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},BQ_DATASET=${{ env.BQ_DATASET }},BQ_TABLE=${{ env.BQ_TABLE }} \
+            --memory=256Mi \
+            --timeout=120s
