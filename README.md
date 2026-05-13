@@ -132,7 +132,7 @@ Then create a scheduler job to call it every hour:
 ```bash
 gcloud scheduler jobs create http weather-extract-hourly \
   --location=us-central1 \
-  --schedule="0 * * * *" \
+  --schedule="0 */12 * * *" \
   --uri=EXTRACT_FUNCTION_URL \
   --http-method=GET \
   --time-zone="Asia/Bangkok"
