@@ -7,6 +7,7 @@ on:
 env:
   PROJECT_ID: gcp-vol2
   REGION: us-central1
+  BUCKET_REGION: asia-southeast3
   GCS_BUCKET: irakli_1
   BQ_DATASET: weather_etl
   BQ_TABLE: hourly_weather
@@ -54,7 +55,7 @@ jobs:
         run: |
           gcloud functions deploy load \
             --gen2 \
-            --region=${{ env.REGION }} \
+            --region=${{ env.BUCKET_REGION }} \
             --runtime=python312 \
             --source=./load \
             --entry-point=load \
