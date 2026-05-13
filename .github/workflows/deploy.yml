@@ -7,8 +7,8 @@ on:
 env:
   PROJECT_ID: gcp-vol2
   REGION: us-central1
-  BUCKET_REGION: asia-southeast3
-  GCS_BUCKET: irakli_1
+  BUCKET_REGION: asia-southeast1
+  GCS_BUCKET: irakli-etl
   BQ_DATASET: weather_etl
   BQ_TABLE: hourly_weather
 
